@@ -1,0 +1,47 @@
+---
+description: Vault local-first knowledge system -- principles, spec paths, skills, backlog, conversation model
+alwaysApply: true
+---
+
+# Vault (core)
+
+## Where the spec lives
+
+This framework package: `vault.md` (hub), `vault_storage.md` (layout, templates), `vault_runtime.md` (skills, workflows). Read in that order when behavior or file layout is unclear.
+
+## Where knowledge lives
+
+The **knowledge root** is the directory that contains `topics/`, `knowledge/`, `index.md`, and the other paths in `vault_storage.md`. It may be another workspace folder or repo. Apply edits there, not only in the framework package. Note: `topics/` (durable topics, active work) and other files under `knowledge/` (reference knowledge plus `glossary.md`) are distinct -- see `vault_storage.md` for the distinction and glossary rules.
+
+## Operating principles
+
+1. Conversation is the interface; files record outcomes.
+2. AI proposes; the user commits. Do not write or change topic files without explicit user approval during the conversation.
+3. Topics are the durable artifact; queue and summaries are pipeline stages.
+4. Track outcomes (what was sent), not draft message text alone.
+5. No background automation: everything is user-initiated.
+
+## Backlog
+
+Treat as needing work: every file in `queue/` and `summaries/` **except** anything under `processed/`, and except `queue/notes.md` when it is empty or whitespace-only (standing scratch file). `review` surfaces this; `process-input` is the main way to drain it.
+
+## Skills (entry points)
+
+- `process-input` -- raw or queued input through summary and optional topic updates.
+- `review` -- orient, scan backlog and topics, stale docs, surface actions.
+- `quick-update` -- user-stated fact or decision into topics.
+- `index-doc` -- add or refresh `docs.md` for a Google Doc (MCP when available).
+
+After topic updates in `process-input` or `quick-update`, run **topic-split** and **topic-archive** checks from `vault_runtime.md` (advisory; user decides).
+
+## Interaction style
+
+Lead with **questions**, not briefings. One judgment at a time. Adapt depth to stakes. User can steer anytime.
+
+## Linking
+
+Wiki-style `[[name]]` links to topic or summary basename (see `vault_runtime.md`).
+
+## Google Docs
+
+When indexing or checking staleness, use MCP (`get_document_metadata`, `get_document_content`, etc.) per `vault_runtime.md` and `vault_storage.md`.

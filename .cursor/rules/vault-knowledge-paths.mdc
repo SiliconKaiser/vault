@@ -1,0 +1,31 @@
+---
+description: Vault knowledge tree file moves, lifecycle, and templates when editing topics, knowledge, queue, or summaries
+globs: "**/topics/**/*.md,**/knowledge/**/*.md,**/summaries/**/*.md,**/queue/**/*,**/archive/topics/**/*.md"
+alwaysApply: false
+---
+
+# Vault (knowledge paths)
+
+Consult `vault_storage.md` in this framework for the full lifecycle table and templates.
+
+## Moves (after user approval)
+
+- Input from `queue/`: after a summary exists, move the source file to `queue/processed/`. After that move, reset `queue/notes.md` to empty (standing scratch file for the next notes).
+- Summary in `summaries/`: after content is integrated into topics, move it to `summaries/processed/`.
+- Archive: only move a topic from `topics/` to `archive/topics/` when the user agrees it is obsolete.
+
+## Topic file sections (active topics in `topics/`)
+
+Use the structure in `vault_storage.md` (Current State, Decisions, Open Questions, Key People, Pending Outbound, Outbound Log, References).
+
+## Reference knowledge (`knowledge/*.md` except `glossary.md`)
+
+Stable reference articles -- no required template or durable-topic lifecycle sections. Freeform.
+
+## Glossary (`knowledge/glossary.md`)
+
+Reserved term index; always read on orient/parse when working under the knowledge root. See `vault_storage.md` section on glossary. Not a durable topic.
+
+## Summaries
+
+Match the summary template in `vault_storage.md` (Source, Date, Topics links, Key Points, Decisions, Action Items).
