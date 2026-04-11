@@ -1,6 +1,6 @@
 ---
-description: Vault knowledge tree file moves, lifecycle, and templates when editing topics, knowledge, queue, or summaries
-globs: "**/topics/**/*.md,**/knowledge/**/*.md,**/summaries/**/*.md,**/queue/**/*,**/archive/topics/**/*.md"
+description: Vault knowledge tree file moves, lifecycle, and templates when editing topics, knowledge, or inbox files
+globs: "**/topics/**/*.md,**/knowledge/**/*.md,**/inbox/**/*,**/processed-inbox/**/*.md,**/archived-topics/**/*.md"
 alwaysApply: false
 ---
 
@@ -10,13 +10,12 @@ Consult `vault_storage.md` in this framework for the full lifecycle table and te
 
 ## Moves (after user approval)
 
-- Input from `queue/`: after a summary exists, move the source file to `queue/processed/`. After that move, reset `queue/notes.md` to empty (standing scratch file for the next notes).
-- Summary in `summaries/`: after content is integrated into topics, move it to `summaries/processed/`.
-- Archive: only move a topic from `topics/` to `archive/topics/` when the user agrees it is obsolete.
+- Inbox file in `inbox/`: after the summary is added at the top and topics are updated, move the file to `processed-inbox/`. After that move, reset `inbox/notes.md` to empty (standing scratch file for the next notes).
+- Archive: only move a topic from `topics/` to `archived-topics/` when the user agrees it is obsolete.
 
 ## Topic file sections (active topics in `topics/`)
 
-Use the structure in `vault_storage.md` (Current State, Decisions, Open Questions, Key People, Pending Outbound, Outbound Log, References).
+Use the structure in `vault_storage.md` (Current State, Decisions, Open Questions, Action Items, Key People, References).
 
 ## Reference knowledge (`knowledge/*.md` except `glossary.md`)
 
@@ -26,6 +25,6 @@ Stable reference articles -- no required template or durable-topic lifecycle sec
 
 Reserved term index; always read on orient/parse when working under the knowledge root. See `vault_storage.md` section on glossary. Not a durable topic.
 
-## Summaries
+## Summary section (at the top of inbox files)
 
-Match the summary template in `vault_storage.md` (Source, Date, Topics links, Key Points, Decisions, Action Items).
+Match the summary section template in `vault_storage.md` (Date processed, Topics links, Key Points, Decisions, Action Items). When an action item remains active beyond processing, mirror it into the relevant topic file as well.

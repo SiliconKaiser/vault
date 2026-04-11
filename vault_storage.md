@@ -14,33 +14,29 @@ The tree below is **knowledge content**. Its root can be a different path or rep
   /knowledge/
     glossary.md          -- reserved term lookup; see "Glossary" below (do not skip when scanning knowledge/)
     *.md                 -- other Markdown files here: reference knowledge (stable, not durable topics)
-  /summaries/            -- summaries not yet integrated into topics (unprocessed)
-  /summaries/processed/  -- summaries whose content is integrated into topics
-  /queue/                -- raw input not yet summarized (unprocessed; optional)
-  /queue/notes.md        -- standing scratch file for quick capture (reset empty after queue intake)
-  /queue/processed/      -- queue files after a summary has been written
-  /archive/
-    /topics/             -- obsolete topics only
+  /inbox/                -- inbox files awaiting processing (unprocessed)
+  /inbox/notes.md        -- standing scratch file for quick capture (reset empty after inbox intake)
+  /processed-inbox/      -- inbox files after processing is complete (summary at top, topics updated)
+  /archived-topics/      -- obsolete topics only
   me.md                  -- personal context: role, team, company (stable reference)
   index.md               -- topic manifest, recent activity log
   docs.md                -- index of Google Docs (URLs, routing, summaries)
 ```
 
-Five top-level directories (`knowledge`, `summaries`, `queue`, and `archive`). Three root files (`me.md`, `index.md`, `docs.md`).
+Five top-level directories (`topics`, `knowledge`, `inbox`, `processed-inbox`, and `archived-topics`). Three root files (`me.md`, `index.md`, `docs.md`).
 
 ### Durable topics vs reference knowledge
 
 Two different kinds of Markdown, in two different places:
 
-- **`/topics/`** holds **durable topics** (active work): projects, initiatives, tracked concerns. These use the topic file template (Current State, Decisions, Open Questions, Key People, Pending Outbound, Outbound Log, References). They change often and carry decisions and outbound history.
+- **`/topics/`** holds **durable topics** (active work): projects, initiatives, tracked concerns. These use the topic file template (Current State, Decisions, Open Questions, Action Items, Key People, References). They change often and carry current state, decisions, active work, and references over time.
 - **`/knowledge/*.md` except `glossary.md`** holds **reference knowledge**: how systems work, configuration, how-tos, comparisons. One file per subject, no required template, no durable-topic lifecycle. A durable topic may link to these files, but there is no 1:1 mapping. Do not call these "topics" in conversation when you mean durable topics; call them **reference knowledge files** (or **knowledge articles**) to avoid confusion with `/topics/`.
 
 **Unprocessed vs processed**
 
-- Anything still in `/queue/` or `/summaries/` (root of each tree only) **needs processing**. The agent should treat these as backlog, **except** `/queue/notes.md` when it is empty or whitespace-only (standing capture slot).
-- **`/queue/`** -- raw input waiting to be turned into a summary. After summarization, the source file moves to `/queue/processed/`. **`/queue/notes.md`** -- default inbox; after any queue file moves to `queue/processed/`, `process-input` resets this file to blank for the next session.
-- **`/summaries/`** -- structured summaries waiting to have their content folded into topics. After topic integration (with user approval), the file moves to `/summaries/processed/`.
-- **`/archive/topics/`** -- durable topics that are obsolete; not part of the queue/summary pipeline.
+- Everything in `/inbox/` **needs processing**, **except** `/inbox/notes.md` when it is empty or whitespace-only (standing capture slot).
+- **`/inbox/`** -- inbox files awaiting processing. During processing, the AI adds a `## Summary` section to the top of the file, updates topics, then moves the file to `/processed-inbox/`. **`/inbox/notes.md`** -- default capture file; after any inbox file moves to `processed-inbox/`, `process-inbox` resets this file to blank for the next session.
+- **`/archived-topics/`** -- durable topics that are obsolete; not part of the inbox pipeline.
 
 ### Glossary
 
@@ -57,16 +53,14 @@ Two different kinds of Markdown, in two different places:
 
 | Artifact               | Location                                          | Lifecycle                                                    |
 | ---------------------- | ------------------------------------------------- | ------------------------------------------------------------ |
-| Raw input (unprocessed)| Conversation or `/queue/`                         | After a summary exists, queue file moves to `/queue/processed/`; then `queue/notes.md` is cleared |
-| Raw input (processed)  | `/queue/processed/`                               | Reference only; no longer in the queue backlog               |
-| Summary (unprocessed)  | `/summaries/`                                     | After content is integrated into topics, moves to `/summaries/processed/` |
-| Summary (processed)    | `/summaries/processed/`                           | Reference and provenance; linked from topics                 |
+| Inbox file (unprocessed)| Conversation or `/inbox/`                       | AI adds summary, updates topics, then moves file to `/processed-inbox/`; `inbox/notes.md` is cleared |
+| Inbox file (processed) | `/processed-inbox/`                               | Reference and provenance (summary at top, then original inbox content); linked from topics |
 | Durable knowledge      | `/topics/`                                        | Accumulates over time, edited in place                       |
 | Reference knowledge    | `/knowledge/*.md` except `glossary.md`            | Stable domain reference, edited when facts change            |
-| Archived topic         | `/archive/topics/`                                | Moved when obsolete only                                     |
+| Archived topic         | `/archived-topics/`                               | Moved when obsolete only                                     |
 | Open items / questions | Inside the relevant topic file                    | Removed when resolved                                        |
-| Outbound messages      | Generated in conversation (ephemeral)             | Outcome recorded in topic's Outbound Log                     |
-| Deferred messages      | Inside the relevant topic file (Pending Outbound) | Moved to Outbound Log when sent                              |
+| Action items           | Inside the relevant topic file                    | Updated in place; checked off or removed when done           |
+| Message suggestions    | Conversation                                      | Ephemeral guidance during a session                          |
 | Glossary terms         | `/knowledge/glossary.md`                          | Grows over time, rarely removed                              |
 | Personal context       | `me.md`                                           | Updated when role, team, or company context changes          |
 | Google Doc references  | `docs.md`                                         | Indexed on demand, summaries refreshed when stale            |
@@ -78,7 +72,7 @@ On startup, the AI reads `me.md`, `index.md`, `knowledge/glossary.md`, and `docs
 
 **`me.md`** -- personal context: role, team, company, expertise, and communication preferences. Freeform sections, updated infrequently. The AI uses this to calibrate tone, understand org relationships, and avoid asking obvious questions.
 
-**`knowledge/glossary.md`** -- see [Glossary](#glossary) above. Flat lookup table; alphabetical; consulted for unfamiliar terms during input processing; the AI proposes additions when it encounters new ones.
+**`knowledge/glossary.md`** -- see [Glossary](#glossary) above. Flat lookup table; alphabetical; consulted for unfamiliar terms during inbox processing; the AI proposes additions when it encounters new ones.
 
 ```markdown
 # Glossary
@@ -89,7 +83,7 @@ On startup, the AI reads `me.md`, `index.md`, `knowledge/glossary.md`, and `docs
 | SLI | Service Level Indicator |
 ```
 
-**Other `knowledge/*.md` files** -- reference knowledge, one subject per file (for example how a system works, bucket config, or local dev setup). Not durable topics: no topic template, no decisions/outbound sections, no durable-topic lifecycle. Durable topics under `/topics/` may link to them; keep basenames distinct from durable topic basenames so `[[wiki-style]]` links resolve unambiguously (see [vault_runtime.md](vault_runtime.md#linking)).
+**Other `knowledge/*.md` files** -- reference knowledge, one subject per file (for example how a system works, bucket config, or local dev setup). Not durable topics: no required topic template and no durable-topic lifecycle. Durable topics under `/topics/` may link to them; keep basenames distinct from durable topic basenames so `[[wiki-style]]` links resolve unambiguously (see [vault_runtime.md](vault_runtime.md#linking)).
 
 **`docs.md`** -- index of Google Docs the AI should know about. Not a copy of the docs -- a routing layer so the AI knows what exists, what it covers, and when to fetch the live version via MCP.
 
@@ -152,38 +146,39 @@ What is true right now.
 ## Open Questions
 - Unresolved items
 
+## Action Items
+- [ ] Task (owner, urgency)
+
 ## Key People
 - @person: role/relevance
-
-## Pending Outbound
-- [ ] Message to draft/send later
-  > draft text here
-
-## Outbound Log
-- YYYY-MM-DD: What was communicated, where
 
 ## References
 - [[summary-ref]]
 ```
 
-### Summary file structure
+Message suggestions, when useful, happen inline in the conversation. Topic files focus on durable state, decisions, open questions, action items, key people, and references.
+
+### Summary section (at the top of inbox files)
+
+After parsing an inbox item, the AI inserts this section at the top of the file (before the original inbox content):
 
 ```markdown
-# <Title>
+## Summary
 
-**Source**: slack | jira | meeting | note
-**Date**: YYYY-MM-DD
+**Date processed**: YYYY-MM-DD
 **Topics**: [[topic-a]], [[topic-b]]
 
-## Key Points
+### Key Points
 - ...
 
-## Decisions
+### Decisions
 - ...
 
-## Action Items
+### Action Items
 - [ ] Task (owner, urgency)
 ```
+
+Action Items in a processed inbox summary are a snapshot of what the inbox item produced at processing time. If an item remains active after processing, carry it into the relevant topic's `Action Items` section so it can be updated there over time.
 
 ### index.md
 
@@ -197,4 +192,4 @@ What is true right now.
 - YYYY-MM-DD: what was processed -> what was updated
 ```
 
-On startup, the AI reads `me.md`, `index.md`, `knowledge/glossary.md`, and `docs.md` to orient. The AI maintains `index.md` after each processing session. It proposes updates to `knowledge/glossary.md` when it encounters new terms, and to `me.md` when it learns new stable personal or org context. It proposes updates to `docs.md` when it encounters new Google Doc URLs or detects stale entries. It proposes new or updated reference knowledge files (additional `knowledge/*.md`, other than `glossary.md`) when long-form reference material emerges from processing.
+On startup, the AI reads `me.md`, `index.md`, `knowledge/glossary.md`, and `docs.md` to orient. The AI maintains `index.md` after each processing session. It proposes updates to `knowledge/glossary.md` when it encounters new terms, and to `me.md` when it learns new stable personal or org context. It proposes updates to `docs.md` when it encounters new Google Doc URLs or detects stale entries. It proposes new or updated reference knowledge files (additional `knowledge/*.md`, other than `glossary.md`) when long-form reference material emerges from processing. Topic References sections link to processed inbox files by basename (e.g. `[[2026-03-18-slack-dns-cutover]]` resolves to `processed-inbox/2026-03-18-slack-dns-cutover.md`).

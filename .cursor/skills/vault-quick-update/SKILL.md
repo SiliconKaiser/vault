@@ -1,23 +1,18 @@
 ---
 name: vault-quick-update
 description: >-
-  Records a user-stated fact or decision into Vault topic files without full
-  input processing: clarify topic and change, propose a patch, optional
-  outbound message. Use when the user reports a decision, status update, or
+  Records a user-stated fact, decision, status update, or action-item change into Vault topic files without running the
+  full inbox workflow: clarify topic and change, propose a patch, optional
+  message suggestions in chat. Use when the user reports a decision, status update, or
   fact to capture, or says quick-update in a vault context.
 ---
 
 # Vault: quick-update
 
-## Before you start
+Read `index.md`, `me.md`, `knowledge/glossary.md`, and `docs.md` at the knowledge root.
 
-1. Framework reference: `vault_runtime.md` (framework root).
-2. **Knowledge root** with `topics/`, `knowledge/`, and `index.md`.
+1. **Understand** -- Identify topic and change. One change at a time.
+2. **Update** -- Propose edits (template in `vault_storage.md`). Use the topic's `Action Items` section for mutable tasks and status changes. Apply after approval. Update `index.md` / `[[links]]` if needed. Run `vault-topic-split` and `vault-topic-archive`; only surface real suggestions.
+3. **Follow-up communication** -- If anyone else needs to know, suggest wording in chat.
 
-## Steps
-
-1. **Understand** -- Ask which topic (or create one if user agrees) and what changed. One change at a time if multiple.
-2. **Update** -- Propose concrete edits to the topic file matching the template in `vault_storage.md`. Apply only after user approval. Update `index.md` / `[[links]]` if needed. Then run **topic-split** and **topic-archive** checks (`vault_runtime.md`).
-3. **Outbound** -- Ask if anyone else needs to know; if yes, draft a message in conversation and record the outcome in **Outbound Log** after the user sends it.
-
-Do not use this skill for long pasted threads; use `vault-process-input` instead.
+For long pasted threads or inbox files, use `vault-process-inbox` instead.

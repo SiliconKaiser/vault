@@ -15,28 +15,28 @@ The **knowledge root** is the directory that contains `topics/`, `knowledge/`, `
 
 ## Operating principles
 
-1. Conversation is the interface; files record outcomes.
-2. AI proposes; the user commits. Do not write or change topic files without explicit user approval during the conversation.
-3. Topics are the durable artifact; queue and summaries are pipeline stages.
-4. Track outcomes (what was sent), not draft message text alone.
+1. Conversation is the interface; files capture durable knowledge.
+2. AI acts autonomously; the user steers. Update topic files directly -- no approval gate. Only pause to ask when there is genuine ambiguity or conflicting information.
+3. Topics are the durable artifact; inbox files are pipeline stages.
+4. Message suggestions stay in the conversation. Topic files capture durable state, decisions, questions, action items, people, and references. When processing an inbox item, carry active tasks into the relevant topic files.
 5. No background automation: everything is user-initiated.
 
 ## Backlog
 
-Treat as needing work: every file in `queue/` and `summaries/` **except** anything under `processed/`, and except `queue/notes.md` when it is empty or whitespace-only (standing scratch file). `review` surfaces this; `process-input` is the main way to drain it.
+Treat as needing work: every file in `inbox/` except `inbox/notes.md` when it is empty or whitespace-only (standing scratch file). `review` surfaces this; `process-inbox` is the main way to drain it.
 
 ## Skills (entry points)
 
-- `process-input` -- raw or queued input through summary and optional topic updates.
+- `process-inbox` -- raw content or an inbox file: parse, summarize, update topics, finalize. Autonomous end-to-end.
 - `review` -- orient, scan backlog and topics, stale docs, surface actions.
 - `quick-update` -- user-stated fact or decision into topics.
 - `index-doc` -- add or refresh `docs.md` for a Google Doc (MCP when available).
-
-After topic updates in `process-input` or `quick-update`, run **topic-split** and **topic-archive** checks from `vault_runtime.md` (advisory; user decides).
+- `glossary-detect` -- flag unknown domain terms, ask for definition via `AskQuestion`, append to glossary. Runs automatically in `process-inbox` and `quick-update`, or standalone.
+- `topic-split` / `topic-archive` -- run automatically after topic updates in `process-inbox` or `quick-update` (advisory; user decides).
 
 ## Interaction style
 
-Lead with **questions**, not briefings. One judgment at a time. Adapt depth to stakes. User can steer anytime.
+Autonomous by default. Only ask when there is ambiguity (multiple plausible interpretations) or conflict (new info contradicts recorded state). When asking, use `AskQuestion` with succinct multiple-choice options -- never open-ended. One question at a time. User can steer or correct after the fact.
 
 ## Linking
 
