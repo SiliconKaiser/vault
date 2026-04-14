@@ -1,5 +1,5 @@
 ---
-description: Vault local-first knowledge system -- principles, spec paths, skills, backlog, conversation model
+description: Vault knowledge system -- principles, spec paths, skills, message model
 alwaysApply: true
 ---
 
@@ -11,37 +11,30 @@ This framework package: `vault.md` (hub), `vault_storage.md` (layout, templates)
 
 ## Where knowledge lives
 
-The **knowledge root** is the directory that contains `topics/`, `knowledge/`, `index.md`, and the other paths in `vault_storage.md`. It may be another workspace folder or repo. Apply edits there, not only in the framework package. Note: `topics/` (durable topics, active work) and other files under `knowledge/` (reference knowledge plus `glossary.md`) are distinct -- see `vault_storage.md` for the distinction and glossary rules.
+The **knowledge root** is the directory that contains `topics/`, `knowledge/`, `records/`, `index.md`, and the other paths in `vault_storage.md`. It may be another workspace folder or repo. Apply edits there, not only in the framework package. **Durable topics** (`topics/`) and **reference knowledge** (`knowledge/*.md`) are different; see `vault_storage.md`.
 
 ## Operating principles
 
-1. Conversation is the interface; files capture durable knowledge.
-2. AI acts autonomously; the user steers. Update topic files directly -- no approval gate. Only pause to ask when there is genuine ambiguity or conflicting information.
-3. Topics are the durable artifact; inbox files are pipeline stages.
-4. Message suggestions stay in the conversation. Topic files capture durable state, decisions, questions, action items, people, and references. When processing an inbox item, carry active tasks into the relevant topic files.
-5. No background automation: everything is user-initiated.
-
-## Backlog
-
-Treat as needing work: every file in `inbox/` except `inbox/notes.md` when it is empty or whitespace-only (standing scratch file). `review` surfaces this; `process-inbox` is the main way to drain it.
+1. Chat is the default interface; markdown files hold durable knowledge.
+2. AI acts autonomously; the user steers. Update vault files directly—no approval gate. Pause only for genuine ambiguity or conflicting information.
+3. Topics are the primary work artifact; `records/` holds provenance for messages that changed the vault.
+4. Suggestions for messages to send others stay in the chat reply. Topic files hold durable state, decisions, questions, action items, people, and references.
+5. No background vault automation inside this spec: each turn is driven by a user message (or equivalent task) in the host environment.
 
 ## Skills (entry points)
 
-- `process-inbox` -- raw content or an inbox file: parse, summarize, update topics, finalize. Autonomous end-to-end.
-- `review` -- orient, scan backlog and topics, stale docs, surface actions.
-- `quick-update` -- user-stated fact or decision into topics.
-- `index-doc` -- add or refresh `docs.md` for a Google Doc (MCP when available).
-- `glossary-detect` -- flag unknown domain terms, ask for definition via `AskQuestion`, append to glossary. Runs automatically in `process-inbox` and `quick-update`, or standalone.
-- `topic-split` / `topic-archive` -- run automatically after topic updates in `process-inbox` or `quick-update` (advisory; user decides).
+- `process-message` -- handle the current user message: read-only reply, or mutating integration + `records/` + one git commit.
+- `review` -- orient, scan topics (and optionally recent records), surface actions.
+- `topic-manage` -- create/update topics; evaluate split; use when editing topics or integrating new knowledge into the vault.
+
+## When editing topics or integrating new knowledge
+
+Follow `vault_storage.md` for templates and paths. After substantive topic edits, run the advisory parts of `topic-manage` (split evaluation) and surface only meaningful suggestions.
 
 ## Interaction style
 
-Autonomous by default. Only ask when there is ambiguity (multiple plausible interpretations) or conflict (new info contradicts recorded state). When asking, use `AskQuestion` with succinct multiple-choice options -- never open-ended. One question at a time. User can steer or correct after the fact.
+Autonomous by default. Ask only when there is ambiguity or conflict. Use `AskQuestion` with succinct multiple-choice options—never open-ended. One question at a time. The user can steer or correct afterward.
 
 ## Linking
 
-Wiki-style `[[name]]` links to topic or summary basename (see `vault_runtime.md`).
-
-## Google Docs
-
-When indexing or checking staleness, use MCP (`get_document_metadata`, `get_document_content`, etc.) per `vault_runtime.md` and `vault_storage.md`.
+Wiki-style `[[name]]` links to topic, knowledge article, or record basename (see `vault_runtime.md`).

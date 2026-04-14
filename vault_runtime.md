@@ -1,82 +1,75 @@
 # Vault: Runtime
 
-Conversation model, agent skills, topic maintenance, doc indexing, workflows, and linking. Hub: [vault.md](vault.md). Layout and templates: [vault_storage.md](vault_storage.md).
+Conversation model, agent skills, topic maintenance, workflows, and linking. Hub: [vault.md](vault.md). Layout and templates: [vault_storage.md](vault_storage.md).
 
 ---
 
-## Interaction Model
+## Interaction model
 
-The system is **conversation-driven, not event-driven.** You initiate by providing content. The AI leads a Q&A conversation to process it. No batch jobs, no background automation, no scheduled pipelines.
+Processing is **message-based**: each user message is handled in one pass. The AI classifies the message as **read-only** (question, retrieval, clarification without edits) or **mutating** (anything that should change stored knowledge).
 
-### How it works
+- **Read-only:** Answer using the vault and tools. Do **not** create or edit vault files, do **not** add a record under `records/`, and do **not** make a vault commit for that message.
+- **Mutating:** Integrate the message into `topics/`, `knowledge/`, and root files as appropriate; create a **record** under `records/` with the user message and list of changes; update `index.md`; run **topic-manage** checks; finish with **one git commit** for that message that includes every file touched (see [Git](#git)).
 
-1. You provide raw content (paste content or point to a `/inbox/` file).
-2. AI parses it, adds a summary section at the top of the inbox file, updates topics, and handles file moves -- all autonomously.
-3. If follow-up communication would help, AI can suggest wording inline in the conversation. You send manually.
-4. AI finalizes: moves processed inbox file and records topic updates.
+There is no inbox backlog folder. Optional capture outside this spec (local scratch files) is not part of the vault pipeline.
 
 ### Principles
 
-- **Autonomous by default.** The AI parses, summarizes, updates topics, and finalizes without asking. It proceeds end-to-end unless it hits ambiguity or conflict.
-- **Questions only on ambiguity or conflict.** The AI asks a question only when (a) the content could reasonably be interpreted multiple ways, or (b) new information contradicts something already recorded. All other decisions the AI makes on its own.
-- **Structured questions.** When the AI does ask, it uses the `AskQuestion` tool to present a succinct multiple-choice question. No open-ended "what do you think?" prompts. One question at a time.
-- **You can steer at any point.** The conversation is not a fixed script. Corrections after the fact are fine -- the AI adjusts.
-- **AI adapts depth to stakes.** Routine inbox work: fast, no questions. Sensitive or contradictory: pause and ask.
-- **Message suggestions stay in conversation.** The AI may suggest wording inline, while topic files stay focused on durable knowledge.
+- **Autonomous by default.** For mutating messages, the AI parses, updates files, writes the record, and finalizes unless ambiguity or conflict requires a stop.
+- **Questions only on ambiguity or conflict.** Use `AskQuestion` with succinct multiple-choice options. One question at a time. No open-ended prompts.
+- **Chat-first.** Replies should stand alone: summarize what was done or found, point to topic titles by name, and avoid assuming the user sees the repository tree in an editor.
+- **Message suggestions in chat.** When follow-up with other people is useful, suggest wording in the user-facing reply.
 
 ---
 
-## Agent Skills
+## Git
 
-Each skill is a distinct entry point -- a different reason you start a conversation with the AI. Execution steps for each skill live in `.cursor/skills/vault-<name>/SKILL.md`.
+When the environment is a Git repository, **each mutating user message** results in **exactly one commit** containing all vault edits from handling that message (topics, `knowledge/`, `records/`, `me.md`, `index.md`, link fixes, etc.). Read-only turns produce **no commit**.
 
-### 1. `process-inbox`
+Use a short, descriptive commit message (e.g. `vault: note Redis decision under caching topic`).
 
-The primary skill. Takes raw content through the full inbox pipeline: parse, summarize, update topics and action items, and suggest follow-up communication in chat when useful. Entry points: pasted content or a file in `/inbox/`. Anything in `/inbox/` (excluding empty `notes.md`) is fair game.
+---
+
+## Agent skills
+
+Each skill is a distinct entry point. Execution steps live in `.cursor/skills/vault-<name>/SKILL.md`.
+
+### 1. `process-message`
+
+Primary skill. Handles a **user message** end-to-end: classify read-only vs mutating; for mutating work, integrate into the vault, add a `records/` file, update `index.md`, run `topic-manage` advisory steps, and commit once. Entry point is always the current user message (and any attached context), not a folder of pending files.
 
 ### 2. `review`
 
-Start-of-session or on-demand. Scans the vault and surfaces what needs attention: inbox backlog, open questions, action items, stale docs, blocked items.
+Start-of-session or on-demand. Orients from `me.md` and `index.md`, scans topics for open questions and action items, optionally skims recent `records/` for continuity, and surfaces what needs attention.
 
-### 3. `quick-update`
+### 3. `topic-manage`
 
-Record a decision, fact, or action-item change directly into a topic -- no inbox item to process. You tell the AI something; it updates the right topic.
-
-### 4. `glossary-detect`
-
-Detects domain-specific or org-internal terms missing from `knowledge/glossary.md`. Asks for a definition via `AskQuestion`, then appends. Runs automatically inside `process-inbox` and `quick-update` (after parsing), or standalone when the user uses an unfamiliar term in conversation.
-
-### 5. `topic-split` / `topic-archive`
-
-Not standalone workflows -- they run automatically as part of `process-inbox` and `quick-update` after any topic update. Advisory: the AI surfaces observations and the user decides.
-
----
-
-## Bookkeeping
-
-### `index-doc`
-
-Index a Google Doc into `docs.md`. Triggered explicitly ("index this doc" + URL) or detected during `process-inbox` when a new Doc URL appears. Also handles staleness: `review` compares stored revision IDs against current via MCP and offers to re-index changed docs.
+Topic lifecycle: **create** and **update** durable topics (template in `vault_storage.md`), **split** when one file mixes separable concerns. Use when editing topics or integrating new knowledge that affects topics—not only as a follow-up to `process-message`. Advisory split checks surface suggestions; the user decides in chat unless policy says otherwise.
 
 ---
 
 ## Workflows
 
-All workflows are **user-initiated and conversation-driven.** No background processes, no cron jobs, no event triggers. You start every workflow by either providing content or asking a question.
+| Situation                         | Skill             | Typical trigger                                      |
+| --------------------------------- | ----------------- | ---------------------------------------------------- |
+| User sent a message               | `process-message` | Default for normal chat turns                        |
+| User wants orientation or triage  | `review`          | "What needs attention?", status pass                 |
+| Editing topics or merging knowledge | `topic-manage`  | Structural topic work, split review                  |
 
-Each workflow maps to one of the three core skills:
+The AI infers the skill from context; naming the skill explicitly is optional.
 
-| Trigger                      | Skill           | Example                                           |
-| ---------------------------- | --------------- | ------------------------------------------------- |
-| You provide raw content      | `process-inbox` | "Here's a Slack thread about the DNS cutover"     |
-| You ask what's going on      | `review`        | "What needs my attention?"                        |
-| You state a fact or decision | `quick-update`  | "We decided to use Redis for the caching layer"   |
+After any **mutating** `process-message` run, execute the **advisory** portions of `topic-manage` (split evaluation) on touched topics; surface only substantive suggestions.
 
-The AI determines which skill applies from context. You never need to name the skill explicitly.
+---
 
-Glossary detection (`glossary-detect`) runs automatically within `process-inbox` and `quick-update` after parsing, or standalone. Topic management (`topic-split`, `topic-archive`) runs automatically within `process-inbox` and `quick-update` when topics are updated. Bookkeeping skills like `index-doc` are invoked on demand or detected during processing.
+## Chat-first use
 
-**Backlog rule:** Files in `/inbox/` are always treated as needing work, except `/inbox/notes.md` when empty or whitespace-only. `review` surfaces them; `process-inbox` is the primary way to drain them.
+When the user does not keep the vault open in an IDE:
+
+- **Orient from files:** Treat `me.md` and `index.md` as the primary map; mention topic names and short descriptions in replies.
+- **Self-contained answers:** For queries, synthesize from topic and reference files; cite which areas of the vault support the answer (by topic title or file role) without requiring the user to open paths.
+- **Explicit completion:** For mutating turns, briefly confirm what was updated and name affected topics so the user can refer to them later in chat.
+- **No hidden state:** Anything durable belongs in the vault files; the chat does not replace `topics/` or `records/`.
 
 ---
 
@@ -84,10 +77,10 @@ Glossary detection (`glossary-detect`) runs automatically within `process-inbox`
 
 Use wiki-style `[[name]]` links (matching the filename without extension). These are grep-friendly and concise.
 
-Resolution depends on your editor or tooling. **Convention:** keep basenames unique across `topics/` and `knowledge/` so `[[name]]` points to exactly one file. The glossary is only `knowledge/glossary.md` and is not typically linked via `[[glossary]]` unless you standardize that.
+**Convention:** Keep basenames unique across `topics/`, `knowledge/`, and `records/` so `[[name]]` resolves to exactly one file.
 
 Examples:
 
-- `[[dns-migration]]` links to `topics/dns-migration.md` (a durable topic)
-- `[[s3-bucket-config]]` links to `knowledge/s3-bucket-config.md` (reference knowledge; not a durable topic)
-- `[[2026-03-18-slack-dns-cutover]]` links to an inbox file by basename -- in `/inbox/` while unprocessed, or `/processed-inbox/` after processing (same basename; resolves by filename if unique)
+- `[[dns-migration]]` links to `topics/dns-migration.md`
+- `[[s3-bucket-config]]` links to `knowledge/s3-bucket-config.md`
+- `[[2026-04-12-redis-decision]]` links to `records/2026-04-12-redis-decision.md`

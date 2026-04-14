@@ -1,18 +1,16 @@
 ---
 name: vault-review
 description: >-
-  Performs a Vault review session: orient from index and root reference files,
-  list unprocessed inbox items, scan topics for open questions, action items,
-  and stale or blocked work, check Google Doc revision staleness via MCP, and surface actionable
-  items. Use when the user asks what needs attention, for a vault status pass,
-  or to triage backlog before processing.
+  Vault review session: orient from me.md and index.md, scan topics for open questions
+  and action items, optionally skim recent records for continuity, surface actionable
+  items. Use when the user asks what needs attention, for a status pass, or before
+  deeper work.
 ---
 
 # Vault: review
 
-1. **Orient** -- Read `me.md`, `index.md`, `knowledge/glossary.md`, `docs.md` at the knowledge root.
-2. **Scan backlog** -- List every file in `inbox/`.
-3. **Scan topics** -- Collect open questions, action items, stale or blocked items, and any missing context that needs follow-up.
-4. **Doc staleness** -- Compare `docs.md` revision IDs against MCP `get_document_metadata`. Flag mismatches.
-5. **Surface** -- Present findings. Ask what to tackle.
-6. **Act** -- Transition into the relevant skill per user choice.
+1. **Orient** -- Read `me.md` and `index.md` at the knowledge root.
+2. **Topics** -- Scan `topics/` for open questions, action items, stale or blocked work, and missing context.
+3. **Recent change trail** -- Optionally list or skim the newest few files in `records/` for continuity (no backlog concept—records are history, not a queue).
+4. **Surface** -- Present findings clearly for a chat-only user (topic titles, not only paths).
+5. **Act** -- If the user chooses follow-up work, continue with `process-message` or `topic-manage` as appropriate.
