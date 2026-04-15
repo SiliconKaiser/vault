@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository combines a **framework** layer at the repository root (Cursor rules under `.cursor/`, skills, and this file) with **knowledge content** under `vault/`. Rules and skills describe behavior relative to **`vault/`** as the content root for topics, sources, templates, and the topic index.
+This repository combines a **framework** layer at the repository root (this file, `.cursor/skills/`) with **knowledge content** under `vault/`. **Agent policy for the knowledge base lives in this document** so it stays portable; path behavior is expressed relative to **`vault/`** as the content root for topics, sources, templates, and the topic index.
 
 The user’s typical interface is **chat** (for example Telegram); they do not rely on an editor to read or update files.
 
@@ -33,11 +33,13 @@ Classify every incoming user message into exactly one top-level type:
 1. **`kb_interacting`** — The message participates in the knowledge-base flow (read and/or update stored topics under `vault/`).
 2. **`non_kb_interacting`** — The message does not participate; respond with normal assistant behavior and **do not** run KB update/query procedures on `vault/topics/`, `vault/sources/`, or `vault/topic-index.md`.
 
-For **`kb_interacting`** messages, assign exactly one intent:
+For **`kb_interacting`** messages, assign **exactly one** intent:
 
 1. **`query`** — Answer from stored knowledge only; **no** file changes under `vault/` for KB purposes.
 2. **`update`** — Apply durable changes under `vault/` (topics, index, sources, logs as needed).
 3. **`query_and_update`** — Perform **`update`** behavior first, then answer from the updated state. Log only what changed; do not log pure question text.
+
+Do **not** assign multiple intent paths to one message. If both Q&A and persistence apply, use **`query_and_update`**.
 
 ### Processing summary
 
@@ -57,7 +59,7 @@ For **`kb_interacting`** messages, assign exactly one intent:
 | `templates/topic-template.md` | Starting structure for new topics. |
 | `me.md` | Optional stable personal context (tone, preferences). |
 
-Framework material (`.cursor/`, this `AGENTS.md`) lives at the **repository root**; durable knowledge files live **under `vault/`**.
+Framework material (this file, `.cursor/skills/`) lives at the **repository root**; durable knowledge files live **under `vault/`**.
 
 ## Topic files
 
@@ -74,12 +76,42 @@ Each topic MUST live at `vault/topics/<topic-slug>.md`.
 
 Cross-topic links MUST use wiki-link form with the canonical slug: `[[topic-slug]]`.
 
-### Placement
+### Placement by knowledge type
 
-- Slow-changing truth → `## Stable facts`
-- Volatile “what is true now” → `## Current State`
-- Open commitments / tasks → `## Action Items`
-- Meaningful dated change → append under `## Log` (append-only; see [Log](#log))
+| Kind of information | Section |
+|---------------------|---------|
+| Slow-changing reference truth | `## Stable facts` |
+| Volatile “true now” | `## Current State` |
+| Open tasks / commitments | `## Action Items` |
+| Meaningful dated history | `## Log` (append-only) |
+
+### Routing priority
+
+When applying updates:
+
+1. Prefer updating an **existing** topic when it fits the subject.
+2. Create a **new** topic only when no suitable topic exists.
+3. If multiple topics could apply and the right choice matters, ask **one** focused clarification question before large edits.
+
+### Topic creation
+
+1. Choose a canonical `topic-slug`.
+2. Create `vault/topics/<topic-slug>.md` from `vault/templates/topic-template.md`.
+3. Add `- [[topic-slug]] — description` to `vault/topic-index.md`.
+4. Write content into the correct section(s).
+5. For substantive updates, append to `## Log` with a source link.
+
+### Topic split
+
+When one file mixes **separable** subjects: define what moves and what stays; confirm with the user if unclear; create new topic file(s) under `vault/topics/`; move content; update `vault/topic-index.md` and `[[wiki-links]]` elsewhere; append `## Log` lines with source links where substantive.
+
+### Action items
+
+Items stay under `## Action Items` until completed or cancelled. Completion or cancellation that materially changes state SHOULD add a `## Log` line with a source link.
+
+### Split prompting
+
+Do not re-prompt split on every tiny edit—only when the topic meaningfully changed or the user asks.
 
 ## Source records
 
@@ -87,7 +119,7 @@ When an **`update`** or **`query_and_update`** changes stored knowledge, create 
 
 `vault/sources/YYYY/YYYY-MM-DD-<id>.md`
 
-Use a short numeric or alphanumeric `<id>` unique for that calendar day. The year directory matches the date in the filename.
+`<id>` is unique per calendar day. The year directory matches the date in the filename.
 
 **Minimum fields** (adapt shape as long as the fields exist):
 
@@ -116,13 +148,7 @@ Use `<stem>` equal to the source filename without `.md` (for example `2026-04-15
 
 **Do not** append log lines for **`query`**-only turns.
 
-## Routing priority (KB updates)
-
-When applying updates:
-
-1. Prefer updating an **existing** topic when it fits.
-2. Create a **new** topic only when no suitable topic exists.
-3. If routing is ambiguous, ask **one** focused clarification in the chat reply before large or destructive edits.
+For **`update`** and **`query_and_update`**, when stored knowledge changes, create a source record for that change event and link it from each new log line that records a meaningful change.
 
 ## Skills (required)
 
@@ -136,11 +162,25 @@ When applying updates:
 
 If unsure whether to persist, bias toward **mutating** when the user appears to want something remembered.
 
-## Telegram reply
+## KB response delivery
 
-When the message arrived via Telegram (`[telegram_meta]` present), after work completes deliver the final user-visible text through the project’s Telegram integration (for example the Bot API `sendMessage` with `chat_id` from metadata). Store **`TELEGRAM_BOT_TOKEN`** (or equivalent) in Cursor **My Secrets** or agent environment, **never** in this repository.
+For every **`kb_interacting`** message, after KB handling (read and/or write under `vault/`), produce a **short, easy-to-read** user-facing message.
 
-Keep replies concise for mobile unless the user asks for detail.
+**Include only what is essential:**
+
+- Direct answer to the question (if any).
+- What changed in the vault (if anything).
+- Which topic slug(s) were touched (if any).
+- At most **one** clarification question, and only when needed.
+
+Avoid long explanations unless the user asks for detail.
+
+**Channel:**
+
+- **Telegram** (`[telegram_meta]` present): deliver the final user-visible text through the project’s Telegram integration (for example Bot API `sendMessage` with `chat_id` from metadata). Store **`TELEGRAM_BOT_TOKEN`** (or equivalent) in Cursor **My Secrets** or agent environment, **never** in this repository. Keep replies concise for mobile unless the user asks for detail.
+- **Other chat:** return the final text as the normal assistant reply.
+
+The full procedure is in **`.cursor/skills/kb-response/SKILL.md`**.
 
 ## Git
 
