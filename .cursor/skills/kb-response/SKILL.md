@@ -1,36 +1,30 @@
 ---
 name: kb-response
 description: >-
-  Compose concise KB user-facing replies and deliver via Telegram or normal
-  chat after kb_interacting handling.
+  Compose concise KB user-facing replies and deliver via Telegram or normal chat after kb_interacting handling.
 ---
 
 # KB response
 
 ## When to invoke
 
-Any **`kb_interacting`** message **after** KB handling completes (whether the intent was **`query`**, **`update`**, or **`query_and_update`**).
+Every **`kb_interacting`** message **after** KB read/write work under `vault/` is complete (including **`query`**-only turns).
 
 ## Inputs
 
-- Message source metadata (presence of `[telegram_meta]`, channel label).
-- Answer text (from reading topics for **`query`**; from updated state for writes).
-- Update summary from topic management (touched slugs, what changed), or empty for pure **`query`**.
-- Optional: one clarification question if routing required it.
+- Message source metadata (presence of `[telegram_meta]` and `chat_id`).
+- Answer text (from vault for queries; from updated state for `query_and_update`).
+- Update summary from kb-topic-management (or equivalent): touched topics, what changed, clarification flag.
+- Optional: the single clarification question if routing was ambiguous.
 
 ## Procedure
 
-1. **Compose** a short message containing:
-   - The answer (if there was a question).
-   - What changed and which `[[topic-slug]]` names were touched (if any).
-   - At most one clarification question, only if still required.
-2. **Choose delivery channel:**
-   - If Telegram metadata is present: use the Telegram Bot API `sendMessage` with `chat_id` from metadata (implementation of credentials is environment-specific).
-   - Otherwise: respond in normal chat with the same text.
-3. **Deliver** the final user-visible string through that channel.
+1. **Compose** — Short, scannable message: answer (if any), vault changes (if any), topic slugs touched (if any), at most one clarification question only if needed.
+2. **Channel** — If `[telegram_meta]` is present, deliver through the Telegram integration using `chat_id`. Otherwise return as the normal assistant message in chat.
+3. **Deliver** — Send or return exactly one user-facing payload; avoid duplicate verbose system narration.
 
 ## Constraints
 
-- No verbose dumps of file contents unless the user explicitly asks.
-- At most **one** clarifying question per reply.
-- Mobile-friendly brevity for Telegram-style channels.
+- No verbose dumps of file contents unless the user asks.
+- At most **one** clarifying question; omit if not needed.
+- Do not claim vault changes if none occurred on a `query` turn.

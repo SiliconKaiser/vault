@@ -1,9 +1,11 @@
 ---
-description: Topic file structure, placement, routing, splits, and action items under vault/
+description: Topic structure, routing, and lifecycle under vault/.
 alwaysApply: true
 ---
 
 # Topic management
+
+Durable topic files and `topic-index.md` live under **`vault/`** (see `AGENTS.md`).
 
 ## Required topic structure
 
@@ -16,12 +18,10 @@ Each file under `vault/topics/<topic-slug>.md` MUST use these level-2 headings *
 
 Topic slugs MUST be lowercase kebab-case: `[a-z0-9-]+`. Cross-topic links MUST be `[[topic-slug]]`.
 
-Durable topic files and the topic index live under **`vault/`**.
-
 ## Placement by knowledge type
 
 | Kind of information | Section |
-|-------------------|---------|
+|---------------------|---------|
 | Slow-changing reference truth | `## Stable facts` |
 | Volatile “true now” | `## Current State` |
 | Open tasks / commitments | `## Action Items` |
@@ -39,8 +39,12 @@ Use `vault/templates/topic-template.md`, add `vault/topics/<topic-slug>.md`, add
 
 ## Topic split
 
-When one file mixes separable subjects: define what moves and what stays; confirm with the user if unclear; create new topic(s); move content; update `vault/topic-index.md` and wiki-links; append `## Log` lines with source links where substantive.
+When one file mixes separable subjects: define what moves and what stays; confirm with the user if unclear; create new topic(s) under `vault/topics/`; move content; update `vault/topic-index.md` and wiki-links; append `## Log` lines with source links where substantive.
 
 ## Action items
 
 Items stay under `## Action Items` until completed or cancelled. Completion or cancellation that materially changes state SHOULD add a `## Log` line with a source link.
+
+## Split prompting
+
+Do not re-prompt split on every tiny edit—only when the topic meaningfully changed or the user asks.

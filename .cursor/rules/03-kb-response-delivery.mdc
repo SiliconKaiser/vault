@@ -1,5 +1,5 @@
 ---
-description: Short KB responses; Telegram vs normal chat delivery
+description: Short KB replies; Telegram vs normal chat delivery.
 alwaysApply: true
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## When
 
-For every **`kb_interacting`** message, after KB handling (read and/or write), produce a **short, easy-to-read** user-facing message.
+For every **`kb_interacting`** message, after KB handling (read and/or write under `vault/`), produce a **short, easy-to-read** user-facing message.
 
 ## Content
 
@@ -22,7 +22,7 @@ Avoid long explanations unless the user asks for detail.
 
 ## Channel
 
-- **Telegram-originated** messages (when `[telegram_meta]` is present): send the final user-visible text through the Telegram Bot API (`sendMessage` with `chat_id` from metadata). Token stays in secrets/environment, not in the repo.
+- **Telegram-originated** messages (when `[telegram_meta]` is present): send the final user-visible text through the project’s Telegram integration (for example Bot API `sendMessage` with `chat_id` from metadata). Token stays in secrets/environment, not in the repo.
 - **Other chat** origins: return the final text as the normal assistant reply.
 
 Follow **`.cursor/skills/kb-response/SKILL.md`** for the full procedure.

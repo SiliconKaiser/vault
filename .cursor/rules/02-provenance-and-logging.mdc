@@ -1,9 +1,11 @@
 ---
-description: Source records under vault/sources/YYYY/, append-only logs, query-only has no provenance
+description: Source records and append-only logs under vault/.
 alwaysApply: true
 ---
 
 # Provenance and logging
+
+All knowledge paths are under **`vault/`** unless stated otherwise.
 
 ## Unified source tree
 
@@ -15,7 +17,7 @@ All source record files live under:
 
 ## Append-only logs
 
-`## Log` sections are append-only. New lines MUST reference the motivating source file using the canonical relative link pattern from `AGENTS.md`.
+`## Log` sections in `vault/topics/*.md` are append-only. New lines MUST reference the motivating source file using the canonical relative link pattern from `AGENTS.md` (paths relative to the topic file).
 
 ## Queries do not create provenance
 

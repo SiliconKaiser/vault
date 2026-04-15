@@ -1,5 +1,5 @@
 ---
-description: KB message classification — kb_interacting vs non_kb_interacting and intents
+description: Classify user messages for knowledge-base vs normal chat and KB intent.
 alwaysApply: true
 ---
 
@@ -12,8 +12,8 @@ alwaysApply: true
 
 ## KB intent (exactly one per `kb_interacting` message)
 
-1. **`query`** — Read topics and answer; **no** vault mutations for KB purposes.
-2. **`update`** — Change stored knowledge (topics, index, sources, logs as required under `vault/`).
+1. **`query`** — Read topics under `vault/topics/` and answer; **no** vault mutations for KB purposes.
+2. **`update`** — Change stored knowledge under `vault/` (topics, index, sources, logs as required).
 3. **`query_and_update`** — Apply **`update`** first, then answer from updated state; log only substantive changes, not the question alone.
 
 Do not assign multiple intent paths to one message. If both Q&A and persistence apply, use **`query_and_update`**.
