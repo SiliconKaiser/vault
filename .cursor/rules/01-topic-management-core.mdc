@@ -1,0 +1,46 @@
+---
+description: Topic file structure, placement, routing, splits, and action items under vault/
+alwaysApply: true
+---
+
+# Topic management
+
+## Required topic structure
+
+Each file under `vault/topics/<topic-slug>.md` MUST use these level-2 headings **in this order**:
+
+1. `## Stable facts`
+2. `## Current State`
+3. `## Action Items`
+4. `## Log`
+
+Topic slugs MUST be lowercase kebab-case: `[a-z0-9-]+`. Cross-topic links MUST be `[[topic-slug]]`.
+
+Durable topic files and the topic index live under **`vault/`**.
+
+## Placement by knowledge type
+
+| Kind of information | Section |
+|-------------------|---------|
+| Slow-changing reference truth | `## Stable facts` |
+| Volatile “true now” | `## Current State` |
+| Open tasks / commitments | `## Action Items` |
+| Meaningful dated history | `## Log` (append-only) |
+
+## Routing priority
+
+1. Prefer updating an existing topic when it fits the subject.
+2. Create a new topic only when no suitable topic exists.
+3. If multiple topics could apply and the right choice matters, ask **one** focused clarification question before large edits.
+
+## Topic creation
+
+Use `vault/templates/topic-template.md`, add `vault/topics/<topic-slug>.md`, add `- [[topic-slug]] — description` to `vault/topic-index.md`, and populate the correct sections.
+
+## Topic split
+
+When one file mixes separable subjects: define what moves and what stays; confirm with the user if unclear; create new topic(s); move content; update `vault/topic-index.md` and wiki-links; append `## Log` lines with source links where substantive.
+
+## Action items
+
+Items stay under `## Action Items` until completed or cancelled. Completion or cancellation that materially changes state SHOULD add a `## Log` line with a source link.

@@ -1,0 +1,26 @@
+---
+description: Source records under vault/sources/YYYY/, append-only logs, query-only has no provenance
+alwaysApply: true
+---
+
+# Provenance and logging
+
+## Unified source tree
+
+All source record files live under:
+
+`vault/sources/YYYY/YYYY-MM-DD-<id>.md`
+
+`<id>` is unique per calendar day. Include at minimum: `source`, `timestamp`, `message` (and optional `notes`) as described in `AGENTS.md`.
+
+## Append-only logs
+
+`## Log` sections are append-only. New lines MUST reference the motivating source file using the canonical relative link pattern from `AGENTS.md`.
+
+## Queries do not create provenance
+
+**`query`** intent: do **not** create files under `vault/sources/`, do **not** append `## Log` lines for KB purposes, do **not** edit topics for KB storage.
+
+## Updates require provenance when knowledge changes
+
+For **`update`** and **`query_and_update`**, when stored knowledge changes, create a source record for that change event and link it from each new log line that records a meaningful change.
