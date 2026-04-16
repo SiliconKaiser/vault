@@ -8,6 +8,8 @@ In [Cursor](https://cursor.com): **Dashboard → Cloud Agents → Connect Git**,
 
 ## Pull requests from agents
 
+CloudVault starts agents with **`target.autoCreatePr` enabled by default** (see CloudVault `.env.cloudvault` / Terraform). That asks Cursor to open a pull request when the run completes. If that API flag is off, you may get commits on a branch without a PR, and the auto-merge workflow below does not apply.
+
 Cloud Agents typically work on a branch whose name starts with `cursor/`, then open a pull request into the default branch. Enable **Allow auto-merge** for this repo: **Settings → General → Pull requests → Allow auto-merge**.
 
 ### Automatic enablement of auto-merge
