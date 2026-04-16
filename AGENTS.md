@@ -1,130 +1,145 @@
-# Vault — Cloud Agent
+# Agent policy: life-admin knowledge base
 
-## Overview
+This repository contains a **framework** (rules and skills at the repo root) and **knowledge content** under `vault/`. All paths below are relative to the repository root unless stated otherwise.
 
-This repository combines a **framework** layer at the repository root (this file, `.cursor/skills/`) with **knowledge content** under `vault/`. **Agent policy for the knowledge base lives in this document** so it stays portable; path behavior is expressed relative to **`vault/`** as the content root for topics, sources, templates, and the topic index.
+## Roles
 
-The user’s typical interface is **chat** (for example Telegram); they do not rely on an editor to read or update files.
+- **Framework** (`AGENTS.md`, `.cursor/skills/`) — Shareable instructions for *how* to manage knowledge. It does not contain personal data.
+- **Knowledge content** (`vault/`) — Durable topic pages, provenance sources, templates, and the topic index. Agents read and write here.
 
-**Your role:** For each task, interpret the user’s message against the knowledge base, **read and edit files** under `vault/` when intent requires persisting or changing knowledge, **commit and push** when you change repository content, and **send a concise reply** on the messaging channel when applicable.
+`AGENTS.md` and skills live at the repo root; durable files for topics and sources live under `vault/`. Do not duplicate this policy in separate Cursor rule files (for example `.mdc` under `.cursor/rules/`); this file is the single source of truth for these rules.
 
-## Objective
+## Objectives
 
-Maintain **durable life-admin and work knowledge** under `vault/topics/`, with provenance under `vault/sources/`, routing via `vault/topic-index.md`, and new topics from `vault/templates/topic-template.md`.
-
-## Task prompt shape (when present)
-
-```text
-[telegram_meta]
-chat_id=...
-message_id=...
-username=...
-[/telegram_meta]
-
-<user message>
-```
-
-Parse `chat_id` (and optionally `message_id`, `username`) from the block. Ignore the block for vault content; it is only for replies.
+- Maintain durable life-admin and work knowledge in wiki-style topic pages under `vault/topics/`.
+- Prefer updating existing topics before creating new ones.
+- Preserve provenance: substantive updates create source records; log entries link to those sources.
+- After any knowledge-base handling for KB-interacting messages, compose the user-facing reply using the **`kb-response`** skill.
 
 ## Message classification
 
-Classify every incoming user message into exactly one top-level type:
+Every incoming user message is classified into exactly one top-level type:
 
-1. **`kb_interacting`** — The message participates in the knowledge-base flow (read and/or update stored topics under `vault/`).
-2. **`non_kb_interacting`** — The message does not participate; respond with normal assistant behavior and **do not** run KB update/query procedures on `vault/topics/`, `vault/sources/`, or `vault/topic-index.md`.
+1. **`kb_interacting`** — The message participates in the knowledge-base flow (queries and/or updates to stored knowledge).
+2. **`non_kb_interacting`** — The message does not participate; respond as a normal assistant without KB routing, topic edits, source records, or KB-style log appends.
 
-For **`kb_interacting`** messages, assign **exactly one** intent:
+For **`kb_interacting`** messages, assign exactly one intent:
 
-1. **`query`** — Answer from stored knowledge only; **no** file changes under `vault/` for KB purposes.
-2. **`update`** — Apply durable changes under `vault/` (topics, index, sources, logs as needed).
-3. **`query_and_update`** — Perform **`update`** behavior first, then answer from the updated state. Log only what changed; do not log pure question text.
+1. **`query`** — Read stored knowledge and answer; do not modify topics.
+2. **`update`** — Apply changes to topics (and provenance) as needed.
+3. **`query_and_update`** — Apply updates first, then answer from the updated state.
 
-Do **not** assign multiple intent paths to one message. If both Q&A and persistence apply, use **`query_and_update`**.
+## Topic pages
 
-### Processing summary
+### Location and index
 
-| Intent | Topic files under `vault/topics/` | Source records under `vault/sources/` | Log lines |
-|--------|-----------------------------------|----------------------------------------|------------|
-| `query` | Read only | Do not create | Do not append |
-| `update` | Edit/create | Create when knowledge changes | Append for meaningful changes |
-| `query_and_update` | Edit/create as needed | Create when knowledge changes | Append for meaningful changes only |
+- Topic files: `vault/topics/<topic-slug>.md`
+- Authoritative list for routing: `vault/topic-index.md`
 
-## Vault layout (paths relative to `vault/`)
+### Topic slug
 
-| Path | Purpose |
-|------|---------|
-| `topics/` | Topic files: `vault/topics/<topic-slug>.md`. Each file holds one subject. |
-| `topic-index.md` | Authoritative list of topics for routing (`[[topic-slug]]` entries). |
-| `sources/YYYY/` | Provenance: one new file per update that changes stored knowledge. |
-| `templates/topic-template.md` | Starting structure for new topics. |
-| `me.md` | Optional stable personal context (tone, preferences). |
+- Lowercase kebab-case: `[a-z0-9-]+` (e.g. `car-maintenance`, `personal-finance`, `mom-health`).
 
-Framework material (this file, `.cursor/skills/`) lives at the **repository root**; durable knowledge files live **under `vault/`**.
+### Required headings (exact order)
 
-## Topic files
-
-Each topic MUST live at `vault/topics/<topic-slug>.md`.
-
-**Topic slugs** MUST be lowercase kebab-case: `[a-z0-9-]+` (examples: `car-maintenance`, `personal-finance`).
-
-**Required headings** MUST appear in this **exact order**, each at most once as a level-2 heading:
+Every topic page **must** contain these four sections, in this order:
 
 1. `## Stable facts`
 2. `## Current State`
 3. `## Action Items`
 4. `## Log`
 
-Cross-topic links MUST use wiki-link form with the canonical slug: `[[topic-slug]]`.
+### Section roles
 
-### Placement by knowledge type
+- **Stable facts** — Slow-changing reference truths for this topic (corrected or updated when reality changes).
+- **Current State** — What is true now and expected to change; overwrite as things move.
+- **Action Items** — Open commitments until done or cancelled; optional due/urgency.
+- **Log** — Dated, append-only lines when meaningful changes occur; every entry links to its source record (see Provenance).
 
-| Kind of information | Section |
-|---------------------|---------|
-| Slow-changing reference truth | `## Stable facts` |
-| Volatile “true now” | `## Current State` |
-| Open tasks / commitments | `## Action Items` |
-| Meaningful dated history | `## Log` (append-only) |
+### Cross-topic links
+
+Use wiki links with canonical slugs only:
+
+- `[[topic-slug]]`
+
+## Processing rules by intent
+
+### Query
+
+- Read relevant files under `vault/topics/` (and `vault/topic-index.md` for routing).
+- Return the answer.
+- Do **not** modify topic files, append log entries, or create source records.
+
+### Update
+
+- Route to existing topic(s) or create a topic if none fits.
+- Apply updates to the correct section(s).
+- Create a source record under `vault/sources/` (see Provenance).
+- Append a log entry for each meaningful change, with a link to the source file.
+
+### Query and update
+
+- Perform **update** behavior first, then answer the query from the updated state.
+- Log only substantive changes; do not log pure question text as if it were a knowledge change.
+
+### Non-KB interacting
+
+- Do not run the KB update/query flow for topic files.
+- Handle the message with normal assistant behavior.
+
+## Topic management
+
+Use the **`kb-topic-management`** skill for any `kb_interacting` message with intent **`update`** or **`query_and_update`**.
 
 ### Routing priority
 
-When applying updates:
+1. Prefer updating an existing topic when it fits.
+2. Create a new topic only when no suitable topic exists.
+3. If routing is ambiguous, ask **one** clarification question.
 
-1. Prefer updating an **existing** topic when it fits the subject.
-2. Create a **new** topic only when no suitable topic exists.
-3. If multiple topics could apply and the right choice matters, ask **one** focused clarification question before large edits.
+### Placement
 
-### Topic creation
+- Stable truth → `## Stable facts`
+- Volatile “now” state → `## Current State`
+- Commitments/tasks → `## Action Items`
+- Meaningful dated change → append to `## Log` (with source link)
+
+### Creating a topic
 
 1. Choose a canonical `topic-slug`.
 2. Create `vault/topics/<topic-slug>.md` from `vault/templates/topic-template.md`.
-3. Add `- [[topic-slug]] — description` to `vault/topic-index.md`.
-4. Write content into the correct section(s).
-5. For substantive updates, append to `## Log` with a source link.
-
-### Topic split
-
-When one file mixes **separable** subjects: define what moves and what stays; confirm with the user if unclear; create new topic file(s) under `vault/topics/`; move content; update `vault/topic-index.md` and `[[wiki-links]]` elsewhere; append `## Log` lines with source links where substantive.
+3. Add a line to `vault/topic-index.md`: `- [[topic-slug]] — short description`
+4. Fill the correct section(s) with initial content.
+5. For substantive updates, append log entries with source links.
 
 ### Action items
 
-Items stay under `## Action Items` until completed or cancelled. Completion or cancellation that materially changes state SHOULD add a `## Log` line with a source link.
+- Keep open items in `## Action Items` until done or cancelled per user/project policy.
+- Completing or cancelling an item should produce a log entry with a source link when it is a meaningful state change.
 
-### Split prompting
+### Splitting a topic
 
-Do not re-prompt split on every tiny edit—only when the topic meaningfully changed or the user asks.
+When one file mixes two or more separable subjects:
 
-## Source records
+1. Decide what moves to a new topic and what stays.
+2. Confirm with the user if boundaries are unclear.
+3. Create new topic file(s), move content, fix `[[links]]`.
+4. Update `vault/topic-index.md`.
+5. Append log entries with source links on affected topics for substantive moves.
 
-When an **`update`** or **`query_and_update`** changes stored knowledge, create **exactly one** new file per such change event under:
+Do not re-prompt splits on every tiny edit—only when the topic meaningfully changed or the user asks.
 
-`vault/sources/YYYY/YYYY-MM-DD-<id>.md`
+## Provenance and logging
 
-`<id>` is unique per calendar day. The year directory matches the date in the filename.
+### Source records
 
-**Minimum fields** (adapt shape as long as the fields exist):
+- Store all source files under: `vault/sources/YYYY/YYYY-MM-DD-<source-id>.md`
+- `<source-id>` is unique per calendar day (e.g. `001`, `002`).
 
-```markdown
-# Source Record: YYYY-MM-DD-<id>
+Each source file **must** include at least:
+
+```md
+# Source Record: YYYY-MM-DD-<source-id>
 
 - source: <origin description>
 - timestamp: <ISO-8601 timestamp>
@@ -132,60 +147,46 @@ When an **`update`** or **`query_and_update`** changes stored knowledge, create 
 - notes: <optional>
 ```
 
-**Do not** create source files for **`query`**-only turns.
+Examples of `source` values: `Telegram from user …`, `Cursor chat from user …`, `Manual note from user …`.
 
-## Log
+### Log entries (in topic files)
 
-The `## Log` section is **append-only**. Each new log line MUST link to the source file that motivated the change.
+- Append only; do not rewrite historical log lines except to fix clear errors with user direction.
+- Every log line **must** reference the source file that triggered the change.
 
-Paths in log links are relative to the topic file under `vault/topics/`:
+Canonical format (paths relative to `vault/topics/<topic-slug>.md`):
 
 ```text
-- YYYY-MM-DD — <event summary>. Source: [<stem>](../sources/YYYY/YYYY-MM-DD-<id>.md)
+- YYYY-MM-DD — <event summary>. Source: [<source-id>](../sources/YYYY/YYYY-MM-DD-<source-id>.md)
 ```
 
-Use `<stem>` equal to the source filename without `.md` (for example `2026-04-15-001`).
+Pure **query** KB messages **must not** create source files or log entries.
 
-**Do not** append log lines for **`query`**-only turns.
+## Response delivery
 
-For **`update`** and **`query_and_update`**, when stored knowledge changes, create a source record for that change event and link it from each new log line that records a meaningful change.
+Use the **`kb-response`** skill for **every** `kb_interacting` message after KB handling completes.
 
-## Skills (required)
+### Channels
 
-- For **`kb_interacting`** messages with **`update`** or **`query_and_update`**: follow **`.cursor/skills/kb-topic-management/SKILL.md`** for routing, create/update/split, source files, and log appends.
-- For **every** **`kb_interacting`** message (after KB handling): follow **`.cursor/skills/kb-response/SKILL.md`** to compose and deliver the short user-facing reply.
+- If the message originated from **Telegram**, send the final user response through the Telegram command interface (the send command is implemented outside this policy).
+- Otherwise, return the response in normal chat.
 
-## Read-only vs mutating turns
+### Content
 
-- **`query`:** Do not modify topic files, `vault/topic-index.md`, or `vault/sources/`. Do not append log lines. Do not commit unless the user asked for something else that changes files.
-- **`update` / `query_and_update`:** Update topics and `vault/topic-index.md` as needed; create source files; append logs; then **one git commit** with a short message and push to the default branch when vault content changed.
+Keep KB responses short and scannable:
 
-If unsure whether to persist, bias toward **mutating** when the user appears to want something remembered.
+- Answer (if any)
+- What changed (if any)
+- Which topic(s) were touched
+- At most **one** clarification question, only when needed
 
-## KB response delivery
+Avoid verbose dumps; no more than one clarifying question.
 
-For every **`kb_interacting`** message, after KB handling (read and/or write under `vault/`), produce a **short, easy-to-read** user-facing message.
+## Skills (invocation summary)
 
-**Include only what is essential:**
+| Skill | When |
+| ----- | ---- |
+| `kb-topic-management` | `kb_interacting` + (`update` or `query_and_update`) |
+| `kb-response` | Any `kb_interacting` message after KB handling |
 
-- Direct answer to the question (if any).
-- What changed in the vault (if anything).
-- Which topic slug(s) were touched (if any).
-- At most **one** clarification question, and only when needed.
-
-Avoid long explanations unless the user asks for detail.
-
-**Channel:**
-
-- **Telegram** (`[telegram_meta]` present): deliver the final user-visible text through the project’s Telegram integration (for example Bot API `sendMessage` with `chat_id` from metadata). Store **`TELEGRAM_BOT_TOKEN`** (or equivalent) in Cursor **My Secrets** or agent environment, **never** in this repository. Keep replies concise for mobile unless the user asks for detail.
-- **Other chat:** return the final text as the normal assistant reply.
-
-The full procedure is in **`.cursor/skills/kb-response/SKILL.md`**.
-
-## Git
-
-Use a **single default branch** workflow unless the project owner specifies otherwise.
-
-## Ambiguity and conflict
-
-If the message is ambiguous or contradicts the vault, ask **one** focused clarification in the chat reply before making large or destructive edits. Prefer small, reversible updates when interpretation is unclear.
+Classification and routing use `vault/topic-index.md` and candidate topics under `vault/topics/`.

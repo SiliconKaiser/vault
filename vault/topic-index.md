@@ -1,7 +1,9 @@
 # Topic index
 
-Authoritative list of topics under `vault/topics/`. Each entry uses wiki-link form.
+Authoritative list of topics for routing. Each entry uses this form:
 
-<!-- Add topics as you create them, for example:
-- [[example-topic]] — Short description
--->
+- `[[topic-slug]]` — short description
+
+## Topics
+
+(Add topics below as they are created.)

@@ -1,30 +1,36 @@
 ---
 name: kb-response
-description: >-
-  Compose concise KB user-facing replies and deliver via Telegram or normal chat after kb_interacting handling.
+description: Compose and deliver short KB-facing replies after knowledge-base handling — answer, changes, touched topics; channel-aware (Telegram vs chat). Use for every kb_interacting message after KB work.
 ---
 
-# KB response
+# Knowledge-base response delivery
 
 ## When to invoke
 
-Every **`kb_interacting`** message **after** KB read/write work under `vault/` is complete (including **`query`**-only turns).
+- Any **`kb_interacting`** message **after** query handling and/or **`kb-topic-management`** completes.
+
+Runs for **`query`**, **`update`**, and **`query_and_update`** so the user always gets a consistent, concise KB reply.
 
 ## Inputs
 
-- Message source metadata (presence of `[telegram_meta]` and `chat_id`).
-- Answer text (from vault for queries; from updated state for `query_and_update`).
-- Update summary from kb-topic-management (or equivalent): touched topics, what changed, clarification flag.
-- Optional: the single clarification question if routing was ambiguous.
+- Message source metadata (e.g. Telegram vs Cursor vs other)
+- Answer text (from topic reads / reasoning)
+- Update summary (from topic management; empty if query-only)
+- Touched topic slugs (if any)
 
 ## Procedure
 
-1. **Compose** — Short, scannable message: answer (if any), vault changes (if any), topic slugs touched (if any), at most one clarification question only if needed.
-2. **Channel** — If `[telegram_meta]` is present, deliver through the Telegram integration using `chat_id`. Otherwise return as the normal assistant message in chat.
-3. **Deliver** — Send or return exactly one user-facing payload; avoid duplicate verbose system narration.
+1. **Compose** one short user-facing message that includes:
+   - The **answer** if the user asked something
+   - **What changed** if anything was updated
+   - **Which topic(s)** (`[[slug]]` or plain slug list) were read or modified
+2. **Clarification** — At most **one** question, only if routing or intent is still unclear; otherwise omit.
+3. **Deliver**:
+   - If origin is **Telegram**, use the Telegram send command/interface (implemented outside this skill) to send the final text
+   - Otherwise, output the final text as the normal chat assistant reply
 
 ## Constraints
 
-- No verbose dumps of file contents unless the user asks.
-- At most **one** clarifying question; omit if not needed.
-- Do not claim vault changes if none occurred on a `query` turn.
+- No verbose output: no long quoted excerpts from vault files unless the user explicitly asked for them
+- At most one clarifying question
+- Match tone to a quick status update, not a full report
