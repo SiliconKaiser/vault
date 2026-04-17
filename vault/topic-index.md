@@ -6,4 +6,4 @@ Authoritative list of topics for routing. Each entry uses this form:
 
 ## Topics
 
-(Add topics below as they are created.)
+- [[aws-gateway-smoke-test]] — Multi-step smoke test for AWS gateway integration with Cursor Cloud Agent via Telegram
