@@ -1,0 +1,8 @@
+Test file for verifying non-draft PR behavior after removing auto-merge workflow.
+
+This file tests that:
+1. A non-draft PR can be created on a cursor/* branch
+2. The auto-merge workflow no longer runs (since it was removed)
+3. The PR creation process works correctly
+
+Date: 2026-04-17
