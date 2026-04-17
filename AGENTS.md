@@ -193,4 +193,4 @@ Classification and routing use `vault/topic-index.md` and candidate topics under
 
 ## Git (Cursor Cloud Agent)
 
-Runs started by **Cursor Cloud Agents** for this repository (for example from CloudVault / Telegram) use **`autoCreatePr` off** at ingress: the agent does **not** rely on opening a pull request for routine work. After substantive edits under `vault/`, create **one** commit with a short message and **push to `main`** on `origin`. Use a pull request only when the user explicitly asks for a branch-based workflow.
+Runs started by **Cursor Cloud Agents** for this repository (for example from CloudVault / Telegram) use a direct-push workflow. After any edits under `vault/`, create **one** commit with a short message and **push directly to `main`** on `origin` (no PR workflow).

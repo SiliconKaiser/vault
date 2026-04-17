@@ -358,7 +358,7 @@ Must include:
 
 ### Git (Cursor Cloud Agent)
 
-- When runs are started without automatic pull request creation at ingress, **`AGENTS.md`** states that substantive edits under `vault/` are delivered as commits **pushed to `main`** (and that pull requests are optional, user-directed only).
+- **`AGENTS.md`** states that substantive edits under `vault/` are delivered as commits **pushed to `main`**.
 
 ## Minimal Acceptance Criteria
 
