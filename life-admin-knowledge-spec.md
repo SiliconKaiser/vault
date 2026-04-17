@@ -356,6 +356,10 @@ Must include:
 - Requirement to invoke `kb-response` for KB-interacting messages after KB handling.
 - Clarification that **`AGENTS.md`** and skills apply from the repo root while topic and source files live under `vault/`.
 
+### Git (Cursor Cloud Agent)
+
+- When runs are started without automatic pull request creation at ingress, **`AGENTS.md`** states that substantive edits under `vault/` are delivered as commits **pushed to `main`** (and that pull requests are optional, user-directed only).
+
 ## Minimal Acceptance Criteria
 
 Implementation is conformant when all of the following are true:
