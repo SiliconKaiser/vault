@@ -29,6 +29,22 @@ For **`kb_interacting`** messages, assign exactly one intent:
 2. **`update`** — Apply changes to topics (and provenance) as needed.
 3. **`query_and_update`** — Apply updates first, then answer from the updated state.
 
+## Task prompt metadata (Telegram)
+
+Runs started from Telegram (via CloudVault) may begin with a metadata block, then the user message. Parse it for reply routing only; ignore it for vault file content.
+
+```text
+[telegram_meta]
+chat_id=...
+message_id=...
+username=...
+[/telegram_meta]
+
+<user message>
+```
+
+Use `chat_id` for outbound Telegram delivery. `message_id` / `username` are optional context.
+
 ## Topic pages
 
 ### Location and index
@@ -168,8 +184,8 @@ Use the **`kb-response`** skill for **every** `kb_interacting` message after KB 
 
 ### Channels
 
-- If the message originated from **Telegram**, send the final user response through the Telegram command interface (the send command is implemented outside this policy).
-- Otherwise, return the response in normal chat.
+- If the task prompt contains **`[telegram_meta]`** (Telegram ingress via CloudVault), send the **final user-visible reply** (after any KB or non-KB handling) with the Telegram Bot API method **`sendMessage`**: HTTPS `POST` to `https://api.telegram.org/bot<token>/sendMessage` with JSON body `chat_id` (from metadata), `text` (the composed reply), and optionally `reply_to_message_id` (from metadata). Read **`TELEGRAM_BOT_TOKEN`** from Cursor **My Secrets** (or agent environment); never commit the token or put it in vault files.
+- Otherwise, return the response in normal chat (Cursor UI and similar).
 
 ### Content
 

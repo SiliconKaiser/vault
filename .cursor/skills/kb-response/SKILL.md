@@ -26,7 +26,7 @@ Runs for **`query`**, **`update`**, and **`query_and_update`** so the user alway
    - **Which topic(s)** (`[[slug]]` or plain slug list) were read or modified
 2. **Clarification** — At most **one** question, only if routing or intent is still unclear; otherwise omit.
 3. **Deliver**:
-   - If origin is **Telegram**, use the Telegram send command/interface (implemented outside this skill) to send the final text
+   - If the task prompt includes **`[telegram_meta]`**, call the Telegram Bot API **`sendMessage`** (HTTPS POST to `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage` with JSON `chat_id` and `text`) using the token from Cursor **My Secrets**
    - Otherwise, output the final text as the normal chat assistant reply
 
 ## Constraints
